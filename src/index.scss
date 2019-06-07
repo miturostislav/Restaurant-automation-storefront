@@ -36,6 +36,10 @@
       bottom: 10px;
       left: 10px;
 
+      &.moving {
+        user-select: none;
+      }
+
       &__header {
         text-align: center;
         background-color: lightgrey;

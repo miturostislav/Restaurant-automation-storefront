@@ -74,13 +74,26 @@ export default function buildElementResizer({ el, wrapper, header }) {
     }
   };
 
-  el.addEventListener('mousedown', onMouseDown);
-  el.addEventListener('mouseenter', onMouseEnter);
-  el.addEventListener('mouseleave', onMouseLeave);
-  header.addEventListener('mouseenter', onHeaderMouseEnter);
-  header.addEventListener('mouseleave', onHeaderMouseLeave);
-  wrapper.addEventListener('mouseup', onMouseUp);
-  wrapper.addEventListener('mousemove', onMouseMove);
+  return {
+    start() {
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseenter', onMouseEnter);
+      el.addEventListener('mouseleave', onMouseLeave);
+      header.addEventListener('mouseenter', onHeaderMouseEnter);
+      header.addEventListener('mouseleave', onHeaderMouseLeave);
+      wrapper.addEventListener('mouseup', onMouseUp);
+      wrapper.addEventListener('mousemove', onMouseMove);
+    },
+    stop() {
+      el.removeEventListener('mousedown', onMouseDown);
+      el.removeEventListener('mouseenter', onMouseEnter);
+      el.removeEventListener('mouseleave', onMouseLeave);
+      header.removeEventListener('mouseenter', onHeaderMouseEnter);
+      header.removeEventListener('mouseleave', onHeaderMouseLeave);
+      wrapper.removeEventListener('mouseup', onMouseUp);
+      wrapper.removeEventListener('mousemove', onMouseMove);
+    }
+  };
 
   function onMouseDown(event) {
     coveredEdgeOnMouseDown = getCoveredEdgeByMouse(event);

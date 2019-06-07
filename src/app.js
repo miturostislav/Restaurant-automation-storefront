@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import buildElementResizer from './utils/elementResizer';
+import React, { useState, useRef } from 'react';
+import useElementResizer from './reactHooks/elementResizerHook';
 
 function App() {
   const [activeTool, setActiveTool] = useState('');
@@ -21,13 +21,12 @@ function App() {
     }
   ];
 
-  useEffect(() => {
-    buildElementResizer({
-      el: contentPaintRef.current,
-      wrapper: contentWrapper.current,
-      header: contentHeaderRef.current,
-    });
-  }, []);
+  useElementResizer({
+    contentRef: contentPaintRef,
+    wrapperRef: contentWrapper,
+    headerRef: contentHeaderRef,
+  });
+
   return (
     <div className="app">
       <div className="paint-tools">
