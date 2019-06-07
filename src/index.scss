@@ -1,0 +1,41 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.app {
+  display: flex;
+
+  .paint-tools {
+    width: 50px;
+    background-color: #333;
+  }
+
+  .content-wrapper {
+    flex-grow: 1;
+    min-height: 100vh;
+    background-color: grey;
+    position: relative;
+
+    .content-paint {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid lightgrey;
+      top: 10px;
+      right: 10px;
+      bottom: 10px;
+      left: 10px;
+
+      &__header {
+        text-align: center;
+        background-color: lightgrey;
+      }
+
+      &__canvas {
+        width: 100%;
+        flex-grow: 1;
+      }
+    }
+  }
+}
