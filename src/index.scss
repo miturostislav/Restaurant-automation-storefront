@@ -7,8 +7,17 @@
   display: flex;
 
   .paint-tools {
-    width: 50px;
+    width: 40px;
+    padding: 2px;
     background-color: #333;
+
+    .tool {
+      border: 1px solid #66a;
+
+      &.active {
+        background-color: #888;
+      }
+    }
   }
 
   .content-wrapper {

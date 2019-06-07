@@ -2,66 +2,58 @@ export default function buildElementResizer({ el, wrapper, header }) {
   let isMouseOnElement = false;
   let isMouseOnHeader = false;
   let coveredEdgeOnMouseDown = null;
-  let mousePositionOnMouseDown = null;
-  let wrapperBoundingClientRect = wrapper.getBoundingClientRect();
+  let elPosition = getElementPosition();
 
   const EDGES = {
     TOP: {
       cursor: 'ns-resize',
-      move: (mousePosition) => el.style.setProperty('top', `${wrapperBoundingClientRect.top + mousePosition.yPos}px`),
+      move: (mouseMovement) => el.style.setProperty('top', `${elPosition.top += mouseMovement.movementY}px`),
     },
     LEFT: {
       cursor: 'ew-resize',
-      move: (mousePosition) => el.style.setProperty('left', `${wrapperBoundingClientRect.left + mousePosition.xPos}px`),
+      move: (mouseMovement) => el.style.setProperty('left', `${elPosition.left += mouseMovement.movementX}px`),
     },
     BOTTOM: {
       cursor: 'ns-resize',
-      move: (mousePosition) => el.style.setProperty('bottom', `${wrapperBoundingClientRect.bottom - mousePosition.yPos}px`),
+      move: (mouseMovement) => el.style.setProperty('bottom', `${elPosition.bottom -= mouseMovement.movementY}px`),
     },
     RIGHT: {
       cursor: 'ew-resize',
-      move: (mousePosition) => el.style.setProperty('right', `${wrapperBoundingClientRect.right - mousePosition.xPos}px`),
+      move: (mouseMovement) => el.style.setProperty('right', `${elPosition.right -= mouseMovement.movementX}px`),
     },
     TOP_LEFT: {
       cursor: 'nwse-resize',
-      move: (mousePosition) => {
-        EDGES.TOP.move(mousePosition);
-        EDGES.LEFT.move(mousePosition);
+      move: (mouseMovement) => {
+        EDGES.TOP.move(mouseMovement);
+        EDGES.LEFT.move(mouseMovement);
       },
     },
     TOP_RIGHT: {
       cursor: 'nesw-resize',
-      move: (mousePosition) => {
-        EDGES.TOP.move(mousePosition);
-        EDGES.RIGHT.move(mousePosition);
+      move: (mouseMovement) => {
+        EDGES.TOP.move(mouseMovement);
+        EDGES.RIGHT.move(mouseMovement);
       },
     },
     BOTTOM_LEFT: {
       cursor: 'nesw-resize',
-      move: (mousePosition) => {
-        EDGES.BOTTOM.move(mousePosition);
-        EDGES.LEFT.move(mousePosition);
+      move: (mouseMovement) => {
+        EDGES.BOTTOM.move(mouseMovement);
+        EDGES.LEFT.move(mouseMovement);
       },
     },
     BOTTOM_RIGHT: {
       cursor: 'nwse-resize',
-      move: (mousePosition) => {
-        EDGES.BOTTOM.move(mousePosition);
-        EDGES.RIGHT.move(mousePosition);
+      move: (mouseMovement) => {
+        EDGES.BOTTOM.move(mouseMovement);
+        EDGES.RIGHT.move(mouseMovement);
       },
     },
     HEADER: {
       cursor: 'move',
-      move: (mousePosition) => {
-        const elBoundingClientRect = el.getBoundingClientRect();
-        EDGES.TOP_LEFT.move({
-          xPos: elBoundingClientRect.left + mousePosition.movementX,
-          yPos: elBoundingClientRect.top + mousePosition.movementY,
-        });
-        EDGES.BOTTOM_RIGHT.move({
-          xPos: elBoundingClientRect.right + mousePosition.movementX,
-          yPos: elBoundingClientRect.bottom + mousePosition.movementY,
-        });
+      move: (mouseMovement) => {
+        EDGES.TOP_LEFT.move(mouseMovement);
+        EDGES.BOTTOM_RIGHT.move(mouseMovement);
       }
     }
   };
@@ -76,12 +68,10 @@ export default function buildElementResizer({ el, wrapper, header }) {
 
   function onMouseDown(event) {
     coveredEdgeOnMouseDown = getCoveredEdgeByMouse(event);
-    mousePositionOnMouseDown = getMousePosition(event);
   }
 
   function onMouseUp() {
     coveredEdgeOnMouseDown = null;
-    mousePositionOnMouseDown = null;
   }
 
   function onMouseEnter() {
@@ -101,22 +91,14 @@ export default function buildElementResizer({ el, wrapper, header }) {
   }
 
   function onMouseMove(event) {
-    const mousePosition = getMousePosition(event);
-
     if (coveredEdgeOnMouseDown) {
-      coveredEdgeOnMouseDown.move(mousePosition);
+      coveredEdgeOnMouseDown.move({
+        movementX: event.movementX,
+        movementY: event.movementY
+      });
     } else {
       const mouseCoveredEdge = getCoveredEdgeByMouse(event);
       setCursorType(mouseCoveredEdge ? mouseCoveredEdge.cursor : 'default');
-    }
-  }
-
-  function getMousePosition(mouseEvent) {
-    return {
-      xPos: mouseEvent.clientX - wrapperBoundingClientRect.left,
-      yPos: mouseEvent.clientY - wrapperBoundingClientRect.top,
-      movementX: mouseEvent.movementX,
-      movementY: mouseEvent.movementY
     }
   }
 
@@ -142,6 +124,18 @@ export default function buildElementResizer({ el, wrapper, header }) {
       );
     }
     return null;
+  }
+
+  function getElementPosition() {
+    const elBoundingClientRect = el.getBoundingClientRect();
+    const wrapperBoundingClientRect = wrapper.getBoundingClientRect();
+
+    return {
+      left: elBoundingClientRect.left - wrapperBoundingClientRect.left,
+      top: elBoundingClientRect.top - wrapperBoundingClientRect.top,
+      right: wrapperBoundingClientRect.right - elBoundingClientRect.right,
+      bottom: wrapperBoundingClientRect.bottom - elBoundingClientRect.bottom
+    };
   }
 
   function setCursorType(cursorStyle = 'default') {
