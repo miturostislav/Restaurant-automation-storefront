@@ -7,12 +7,15 @@
   display: flex;
 
   .paint-tools {
-    width: 40px;
+    width: 75px;
     padding: 2px;
     background-color: #333;
 
     .tool {
       border: 1px solid #66a;
+      padding: 10px;
+      border-radius: 50%;
+      margin: 10px 0;
 
       &.active {
         background-color: #888;
