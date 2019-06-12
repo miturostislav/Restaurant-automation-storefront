@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useElementResizer from './utils/elementResizer/elementResizerHook';
 import pencil from './paintTools/pencil';
+import canvasPaintHandler from './paintTools/canvasPaintHandler';
 
 const tools = [
   pencil,
@@ -37,7 +38,7 @@ function App() {
 
   useEffect(() => {
     if (activeTool) {
-      const paintHandler = buildCanvasPainting(canvasRef.current, activeTool);
+      const paintHandler = canvasPaintHandler(canvasRef.current, activeTool);
 
       paintHandler.start();
       return paintHandler.stop;
@@ -69,23 +70,6 @@ function App() {
 }
 
 export default App;
-
-function buildCanvasPainting(canvas, tool) {
-  const painter = tool.getPainter(canvas);
-
-  return {
-    start() {
-      canvas.addEventListener('mousedown', painter.onMouseDown);
-      canvas.addEventListener('mouseup', painter.onMouseUp);
-      canvas.addEventListener('mousemove', painter.onMouseMove);
-    },
-    stop() {
-      canvas.removeEventListener('mousedown', painter.onMouseDown);
-      canvas.removeEventListener('mouseup', painter.onMouseUp);
-      canvas.removeEventListener('mousemove', painter.onMouseMove);
-    }
-  }
-}
 
 function redrawCanvas(canvas) {
   const ctx = canvas.getContext('2d');
