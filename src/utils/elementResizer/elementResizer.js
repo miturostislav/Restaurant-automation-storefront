@@ -1,4 +1,5 @@
-export default function buildElementResizer({ el, wrapper, header }) {
+export default function buildElementResizer({ el, wrapper, header, onResize = () => {
+} }) {
   let isMouseOnElement = false;
   let isMouseOnHeader = false;
   let coveredEdgeOnMouseDown = null;
@@ -129,6 +130,7 @@ export default function buildElementResizer({ el, wrapper, header }) {
         movementX: event.movementX,
         movementY: event.movementY
       });
+      onResize();
     } else {
       const mouseCoveredEdge = getCoveredEdgeByMouse(event);
       setCursorType(mouseCoveredEdge ? mouseCoveredEdge.cursor : 'default');
