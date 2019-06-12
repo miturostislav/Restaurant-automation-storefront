@@ -1,28 +1,35 @@
 export default {
   id: 'pencil',
   icon: '../public/icons/edit.svg',
-  getPainter: getPencilPainter
-}
+  getPainter(canvas) {
+    const lineWidth = 10;
+    const ctx = canvas.getContext('2d');
+    let startPoint = null;
 
-function getPencilPainter(canvas) {
-  const lineWidth = 10;
-  const ctx = canvas.getContext('2d');
-  let startPoint = null;
+    return {
+      start() {
+        canvas.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('mousedown', onMouseDown);
+        canvas.addEventListener('mousemove', onMouseMove);
+      },
+      stop() {
+        canvas.removeEventListener('mouseup', onMouseUp);
+        canvas.removeEventListener('mousedown', onMouseDown);
+        canvas.removeEventListener('mousemove', onMouseMove);
+      }
+    };
 
-  ctx.lineWidth = lineWidth;
-
-  return {
-    onMouseDown(event) {
+    function onMouseDown(event) {
       startPoint = {
         x: event.offsetX,
         y: event.offsetY
       };
       ctx.lineWidth = lineWidth;
-    },
-    onMouseUp() {
+    }
+    function onMouseUp() {
       startPoint = null;
-    },
-    onMouseMove(event) {
+    }
+    function onMouseMove(event) {
       if (startPoint) {
         ctx.beginPath();
         ctx.moveTo(startPoint.x, startPoint.y);

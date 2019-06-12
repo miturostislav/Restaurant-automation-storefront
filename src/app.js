@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import useElementResizer from './utils/elementResizer/elementResizerHook';
 import pencil from './paintTools/pencil';
 import rectangle from './paintTools/rectangle';
-import canvasPaintHandler from './paintTools/canvasPaintHandler';
 import { redrawCanvasOnResize } from './utils/canvasUtils';
 
 const tools = [
@@ -38,7 +37,7 @@ function App() {
 
   useEffect(() => {
     if (activeTool) {
-      const paintHandler = canvasPaintHandler(canvasRef.current, activeTool);
+      const paintHandler = activeTool.getPainter(canvasRef.current);
 
       paintHandler.start();
       return paintHandler.stop;

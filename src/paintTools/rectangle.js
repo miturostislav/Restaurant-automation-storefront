@@ -3,18 +3,27 @@ import { cloneCanvas } from '../utils/canvasUtils';
 export default {
   id: 'rectangle',
   icon: '../public/icons/edit.svg',
-  getPainter: getPencilPainter
-}
+  getPainter(canvas) {
+    const lineWidth = 10;
+    const ctx = canvas.getContext('2d');
+    let startPoint = null;
+    let finalPoint = null;
+    let clonedCanvas = null;
 
-function getPencilPainter(canvas) {
-  const lineWidth = 10;
-  const ctx = canvas.getContext('2d');
-  let startPoint = null;
-  let finalPoint = null;
-  let clonedCanvas = null;
+    return {
+      start() {
+        canvas.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('mousedown', onMouseDown);
+        canvas.addEventListener('mousemove', onMouseMove);
+      },
+      stop() {
+        canvas.removeEventListener('mouseup', onMouseUp);
+        canvas.removeEventListener('mousedown', onMouseDown);
+        canvas.removeEventListener('mousemove', onMouseMove);
+      }
+    };
 
-  return {
-    onMouseDown(event) {
+    function onMouseDown(event) {
       startPoint = {
         x: event.offsetX,
         y: event.offsetY
@@ -22,13 +31,13 @@ function getPencilPainter(canvas) {
       finalPoint = { ...startPoint };
       clonedCanvas = cloneCanvas(canvas);
       ctx.lineWidth = lineWidth;
-    },
-    onMouseUp() {
+    }
+    function onMouseUp() {
       startPoint = null;
       finalPoint = null;
       clonedCanvas = null;
-    },
-    onMouseMove(event) {
+    }
+    function onMouseMove(event) {
       if (startPoint) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(clonedCanvas, 0, 0);
