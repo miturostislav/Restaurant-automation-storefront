@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useElementResizer from './utils/elementResizer/elementResizerHook';
 import pencil from './paintTools/pencil';
+import rectangle from './paintTools/rectangle';
 import canvasPaintHandler from './paintTools/canvasPaintHandler';
+import { redrawCanvasOnResize } from './utils/canvasUtils';
 
 const tools = [
   pencil,
-  {
-    id: 'pencil1', icon: '../public/icons/edit.svg'
-  },
+  rectangle,
   {
     id: 'pencil2', icon: '../public/icons/edit.svg'
   },
@@ -28,12 +28,12 @@ function App() {
     wrapperRef: contentWrapper,
     headerRef: contentHeaderRef,
     onResize() {
-      redrawCanvas(canvasRef.current);
+      redrawCanvasOnResize(canvasRef.current);
     }
   });
 
   useEffect(() => {
-    redrawCanvas(canvasRef.current);
+    redrawCanvasOnResize(canvasRef.current);
   }, []);
 
   useEffect(() => {
@@ -70,17 +70,3 @@ function App() {
 }
 
 export default App;
-
-function redrawCanvas(canvas) {
-  const ctx = canvas.getContext('2d');
-  const tempCanvas=document.createElement('canvas');
-  const tempCtx = tempCanvas.getContext('2d');
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
-  tempCtx.drawImage(canvas, 0, 0);
-  canvas.width = null;
-  canvas.height = null;
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-  ctx.drawImage(tempCanvas,0, 0, tempCanvas.width, tempCanvas.height,0,0,canvas.width, canvas.height);
-}
