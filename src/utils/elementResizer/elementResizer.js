@@ -1,5 +1,4 @@
-export default function buildElementResizer({ el, wrapper, header, onResize = () => {
-} }) {
+export default function buildElementResizer({ el, wrapper, header, onResize = () => {} }) {
   let isMouseOnElement = false;
   let isMouseOnHeader = false;
   let coveredEdgeOnMouseDown = null;

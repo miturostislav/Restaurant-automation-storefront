@@ -2,7 +2,7 @@ import { cloneCanvas } from '../utils/canvasUtils';
 
 export default {
   id: 'rectangle',
-  icon: '../public/icons/edit.svg',
+  icon: '../public/icons/rectangle.svg',
   getPainter(canvas) {
     const lineWidth = 10;
     const ctx = canvas.getContext('2d');

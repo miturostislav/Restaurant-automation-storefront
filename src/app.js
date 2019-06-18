@@ -2,16 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import useElementResizer from './utils/elementResizer/elementResizerHook';
 import pencil from './paintTools/pencil';
 import rectangle from './paintTools/rectangle';
-import { redrawCanvasOnResize } from './utils/canvasUtils';
+import eraser from './paintTools/eraser';
+import { setSizeAndRedrawCanvas } from './utils/canvasUtils';
 
 const tools = [
   pencil,
   rectangle,
+  eraser,
   {
-    id: 'pencil2', icon: '../public/icons/edit.svg'
-  },
-  {
-    id: 'pencil3', icon: '../public/icons/edit.svg'
+    id: 'pencil3', icon: '../public/icons/pencil.svg'
   }
 ];
 
@@ -27,12 +26,12 @@ function App() {
     wrapperRef: contentWrapper,
     headerRef: contentHeaderRef,
     onResize() {
-      redrawCanvasOnResize(canvasRef.current);
+      setSizeAndRedrawCanvas(canvasRef.current);
     }
   });
 
   useEffect(() => {
-    redrawCanvasOnResize(canvasRef.current);
+    setSizeAndRedrawCanvas(canvasRef.current);
   }, []);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ function App() {
               key={tool.id}
               className={`tool ${activeTool === tool ? 'active' : ''}`}
               onClick={() => tool === activeTool ? setActiveTool(null) : setActiveTool(tool)}>
-              <img src={tool.icon} />
+              <img className="icon" src={tool.icon} />
             </div>
           ))
         }

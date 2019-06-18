@@ -1,6 +1,6 @@
 export default {
   id: 'pencil',
-  icon: '../public/icons/edit.svg',
+  icon: '../public/icons/pencil.svg',
   getPainter(canvas) {
     const lineWidth = 10;
     const ctx = canvas.getContext('2d');

@@ -1,4 +1,4 @@
-export function redrawCanvasOnResize(canvas) {
+export function setSizeAndRedrawCanvas(canvas) {
   const ctx = canvas.getContext('2d');
   const tempCanvas = cloneCanvas(canvas);
   canvas.width = null;
