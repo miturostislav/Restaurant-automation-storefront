@@ -4,7 +4,8 @@ import pencil from './paintTools/pencil';
 import rectangle from './paintTools/rectangle';
 import eraser from './paintTools/eraser';
 import text from './paintTools/text';
-import { setSizeAndRedrawCanvas, cloneCanvas, redrawCanvas } from './utils/canvasUtils';
+import { setSizeAndRedrawCanvas } from './utils/canvasUtils';
+import useUndo from './utils/useUndo';
 
 const tools = [
   pencil,
@@ -13,8 +14,6 @@ const tools = [
   text
 ];
 
-const isMac = navigator.platform === 'MacIntel';
-
 function App() {
   const [activeTool, setActiveTool] = useState(null);
   const [lineWidth, setLineWidth] = useState(10);
@@ -22,8 +21,7 @@ function App() {
   const contentPaintRef = useRef(null);
   const contentHeaderRef = useRef(null);
   const canvasRef = useRef(null);
-  const canvasStates = useRef([]);
-  const undoCounter = useRef(0);
+  const { saveCanvas } = useUndo(canvasRef);
 
   useElementResizer({
     contentRef: contentPaintRef,
@@ -35,40 +33,7 @@ function App() {
   });
 
   useEffect(() => {
-    let isCtlrPressed = false;
-
     setSizeAndRedrawCanvas(canvasRef.current);
-    canvasStates.current.push(cloneCanvas(canvasRef.current));
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('keyup', onKeyUp);
-    };
-
-    function onKeyDown(e) {
-      if (isMac ? e.key === 'Meta' : e.key === 'Control') {
-        isCtlrPressed = true;
-      }
-      if (e.key === 'z' && isCtlrPressed) {
-        if (e.shiftKey) {
-          undoCounter.current = Math.max(0, undoCounter.current - 1);
-        } else {
-          undoCounter.current = Math.min(canvasStates.current.length - 1, undoCounter.current + 1);
-        }
-        const ctx = canvasRef.current.getContext('2d');
-        ctx.save();
-        ctx.globalCompositeOperation = 'source-over';
-        redrawCanvas(canvasRef.current, canvasStates.current[canvasStates.current.length - 1 - undoCounter.current]);
-        ctx.restore();
-      }
-    }
-    function onKeyUp(e) {
-      if (isMac ? e.key === 'Meta' : e.key === 'Control') {
-        isCtlrPressed = false;
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -76,11 +41,7 @@ function App() {
       const paintHandler = activeTool.getPainter({
         canvas: canvasRef.current,
         lineWidth,
-        saveCanvas() {
-          canvasStates.current.splice(canvasStates.current.length - undoCounter.current);
-          canvasStates.current.push(cloneCanvas(canvasRef.current));
-          undoCounter.current = 0;
-        },
+        saveCanvas,
       });
 
       paintHandler.start();
