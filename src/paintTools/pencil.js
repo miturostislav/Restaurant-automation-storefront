@@ -1,8 +1,7 @@
 export default {
   id: 'pencil',
   icon: '../public/icons/pencil.svg',
-  getPainter(canvas) {
-    const lineWidth = 10;
+  getPainter({ canvas, lineWidth, saveCanvas }) {
     const ctx = canvas.getContext('2d');
     let startPoint = null;
 
@@ -28,6 +27,7 @@ export default {
     }
     function onMouseUp() {
       startPoint = null;
+      saveCanvas();
     }
     function onMouseMove(event) {
       if (startPoint) {

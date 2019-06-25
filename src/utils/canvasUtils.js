@@ -1,11 +1,14 @@
 export function setSizeAndRedrawCanvas(canvas) {
-  const ctx = canvas.getContext('2d');
   const tempCanvas = cloneCanvas(canvas);
-  canvas.width = null;
-  canvas.height = null;
   canvas.width = canvas.offsetWidth;
   canvas.height = canvas.offsetHeight;
-  ctx.drawImage(tempCanvas,0, 0, tempCanvas.width, tempCanvas.height,0,0,canvas.width, canvas.height);
+  redrawCanvas(canvas, tempCanvas);
+}
+
+export function redrawCanvas(canvas, newCanvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(newCanvas,0, 0, newCanvas.width, newCanvas.height,0,0,canvas.width, canvas.height);
 }
 
 export function cloneCanvas(canvas) {

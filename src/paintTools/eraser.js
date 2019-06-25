@@ -1,21 +1,20 @@
 import pencil from './pencil';
 
 export default {
-  id: 'pencil',
+  id: 'eraser',
   icon: '../public/icons/eraser.svg',
-  getPainter(canvas) {
-    const pencilPainter = pencil.getPainter(canvas);
+  getPainter({ canvas, lineWidth, saveCanvas }) {
+    const pencilPainter = pencil.getPainter({ canvas, lineWidth, saveCanvas });
     const ctx = canvas.getContext('2d');
-    let initialGlobalCompositeOperation;
 
     return {
       start() {
-        initialGlobalCompositeOperation = ctx.globalCompositeOperation;
+        ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
         pencilPainter.start();
       },
       stop() {
-        ctx.globalCompositeOperation = initialGlobalCompositeOperation;
+        ctx.restore();
         pencilPainter.stop();
       }
     };

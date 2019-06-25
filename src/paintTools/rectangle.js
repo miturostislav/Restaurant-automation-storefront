@@ -3,8 +3,7 @@ import { cloneCanvas } from '../utils/canvasUtils';
 export default {
   id: 'rectangle',
   icon: '../public/icons/rectangle.svg',
-  getPainter(canvas) {
-    const lineWidth = 10;
+  getPainter({ canvas, lineWidth, saveCanvas }) {
     const ctx = canvas.getContext('2d');
     let startPoint = null;
     let finalPoint = null;
@@ -36,6 +35,7 @@ export default {
       startPoint = null;
       finalPoint = null;
       clonedCanvas = null;
+      saveCanvas();
     }
     function onMouseMove(event) {
       if (startPoint) {
