@@ -4,6 +4,7 @@ import pencil from './paintTools/pencil';
 import rectangle from './paintTools/rectangle';
 import eraser from './paintTools/eraser';
 import text from './paintTools/text';
+import selector from './paintTools/selector';
 import { setSizeAndRedrawCanvas } from './utils/canvasUtils';
 import useUndo from './utils/useUndo';
 
@@ -11,7 +12,8 @@ const tools = [
   pencil,
   rectangle,
   eraser,
-  text
+  text,
+  selector
 ];
 
 function App() {

@@ -1,6 +1,6 @@
 export default {
   id: 'text',
-  icon: '../public/icons/pencil.svg',
+  icon: '../public/icons/letter.svg',
   getPainter({ canvas, lineWidth, saveCanvas }) {
     const ctx = canvas.getContext('2d');
     let startPoint;
