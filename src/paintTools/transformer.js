@@ -1,4 +1,5 @@
-import {cloneCanvas} from "../utils/canvasUtils";
+import { cloneCanvas } from '../utils/canvasUtils';
+import { getAngle } from '../utils/mathUtils'
 
 export default {
   id: 'transformer',
@@ -20,9 +21,12 @@ export default {
       },
       stop() {
         ctx.restore();
-        transformer.save();
+        if (transformer) {
+          transformer.save();
+        }
         if (isTransformedAfterSave) {
           saveCanvas();
+          isTransformedAfterSave = false;
         }
         canvas.removeEventListener('mouseup', onMouseUp);
         canvas.removeEventListener('mousedown', onMouseDown);
@@ -245,6 +249,48 @@ function buildTransformer({ canvas }) {
         indicators.BOTTOM.transform(point);
       }
     },
+    ROTATE: (() => {
+      let shouldDrawIndicator = true;
+
+      return {
+        draw(point) {
+          if (shouldDrawIndicator) {
+            const { x, y } = point || { x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y - indicatorWidth * 4 };
+            ctx.beginPath();
+            ctx.arc(
+              x,
+              y,
+              indicatorWidth,
+              0,
+              2 * Math.PI
+            );
+            ctx.fill();
+          }
+        },
+        isActive(point) {
+          return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y - indicatorWidth * 4, point });
+        },
+        transform(point) {
+          const middlePoint = {
+            x: (startPoint.x + finalPoint.x) / 2,
+            y: (startPoint.y + finalPoint.y) / 2
+          };
+          const angle = getAngle(middlePoint, point);
+          clearRectangle();
+          ctx.save();
+          ctx.translate(middlePoint.x, middlePoint.y);
+          ctx.rotate(angle);
+          ctx.translate(-middlePoint.x, -middlePoint.y);
+          shouldDrawIndicator = false;
+          drawTransformerRectangle({ startPoint, finalPoint });
+          drawTransformedImage();
+          drawIndicators();
+          shouldDrawIndicator = true;
+          ctx.restore();
+          indicators.ROTATE.draw(point);
+        }
+      };
+    })()
   };
 
   ctx.fillStyle = '#4285f4';
@@ -276,21 +322,26 @@ function buildTransformer({ canvas }) {
   function drawTransformer({ startPoint, finalPoint }) {
     initialStartPoint = startPoint;
     initialFinalPoint = finalPoint;
+    clearRectangle();
     drawTransformerRectangle({ startPoint, finalPoint });
     drawTransformedImage();
   }
 
   function transform(points) {
+    clearRectangle();
     drawTransformerRectangle(points);
     drawTransformedImage();
     drawIndicators();
   }
 
+  function clearRectangle() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(cloneOuterCanvas(), 0, 0);
+  }
+
   function drawTransformerRectangle({ startPoint: currentStartPoint, finalPoint: currentFinalPoint }) {
     startPoint = currentStartPoint;
     finalPoint = currentFinalPoint;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(cloneOuterCanvas(), 0, 0);
     ctx.beginPath();
     ctx.moveTo(startPoint.x, startPoint.y);
     ctx.lineTo(finalPoint.x, startPoint.y);
