@@ -1,5 +1,5 @@
 import { cloneCanvas } from '../utils/canvasUtils';
-import { getAngle } from '../utils/mathUtils'
+import { getAngle, getRotatedPointByAngle } from '../utils/mathUtils'
 
 export default {
   id: 'transformer',
@@ -84,9 +84,12 @@ function buildTransformer({ canvas }) {
   const indicatorWidth = transformerLineWidth * 5;
   let startPoint = null;
   let finalPoint = null;
+  let angle = 0;
+  let middlePoint = null;
   let initialStartPoint = null;
   let initialFinalPoint = null;
-  let clonedCanvas = cloneCanvas(canvas);
+  let clonedOriginalCanvas = cloneCanvas(canvas);
+  let clonedModifiedCanvas = clonedOriginalCanvas;
 
   const indicators = {
     TOP: {
@@ -102,11 +105,11 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y, point });
+        return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y }, point);
       },
       transform(point) {
-        const heightDiff = startPoint.y - point.y;
-        transform({ startPoint: { x: startPoint.x, y: startPoint.y - heightDiff }, finalPoint });
+        startPoint.y -= startPoint.y - getRotatedPoint(point).y;
+        transform();
       }
     },
     LEFT: {
@@ -122,11 +125,11 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: startPoint.x, y: startPoint.y + (finalPoint.y - startPoint.y) / 2, point });
+        return isIndicatorActive({ x: startPoint.x, y: startPoint.y + (finalPoint.y - startPoint.y) / 2 }, point);
       },
       transform(point) {
-        const widthDiff = startPoint.x - point.x;
-        transform({ startPoint: { x: startPoint.x - widthDiff, y: startPoint.y }, finalPoint });
+        startPoint.x -= startPoint.x - getRotatedPoint(point).x;
+        transform();
       }
     },
     BOTTOM: {
@@ -142,11 +145,11 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: finalPoint.y, point });
+        return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: finalPoint.y }, point);
       },
       transform(point) {
-        const heightDiff = point.y - finalPoint.y;
-        transform({ startPoint, finalPoint : { x: finalPoint.x, y: finalPoint.y + heightDiff } });
+        finalPoint.y += getRotatedPoint(point).y - finalPoint.y;
+        transform();
       }
     },
     RIGHT: {
@@ -162,11 +165,11 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: finalPoint.x, y: startPoint.y + (finalPoint.y - startPoint.y) / 2, point });
+        return isIndicatorActive({ x: finalPoint.x, y: startPoint.y + (finalPoint.y - startPoint.y) / 2 }, point);
       },
       transform(point) {
-        const widthDiff = point.x - finalPoint.x;
-        transform({ startPoint, finalPoint: { x: finalPoint.x + widthDiff, y: finalPoint.y } });
+        finalPoint.x += getRotatedPoint(point).x - finalPoint.x;
+        transform();
       }
     },
     TOP_LEFT: {
@@ -182,7 +185,7 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: startPoint.x, y: startPoint.y, point });
+        return isIndicatorActive({ x: startPoint.x, y: startPoint.y }, point);
       },
       transform(point) {
         indicators.TOP.transform(point);
@@ -202,7 +205,7 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: finalPoint.x, y: startPoint.y, point });
+        return isIndicatorActive({ x: finalPoint.x, y: startPoint.y }, point);
       },
       transform(point) {
         indicators.TOP.transform(point);
@@ -222,7 +225,7 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: startPoint.x, y: finalPoint.y, point });
+        return isIndicatorActive({ x: startPoint.x, y: finalPoint.y }, point);
       },
       transform(point) {
         indicators.LEFT.transform(point);
@@ -242,13 +245,42 @@ function buildTransformer({ canvas }) {
         ctx.fill();
       },
       isActive(point) {
-        return isIndicatorActive({ x: finalPoint.x, y: finalPoint.y, point });
+        return isIndicatorActive({ x: finalPoint.x, y: finalPoint.y }, point);
       },
       transform(point) {
         indicators.RIGHT.transform(point);
         indicators.BOTTOM.transform(point);
       }
     },
+    MOVE: (() => {
+      let previousPoint = null;
+      return {
+        draw() {},
+        isActive(point) {
+          const leftUpperPoint = { x: Math.min(finalPoint.x, startPoint.x), y: Math.min(finalPoint.y, startPoint.y) };
+          const rightLowerPoint = { x: Math.max(finalPoint.x, startPoint.x), y: Math.max(finalPoint.y, startPoint.y) };
+
+          if (
+            point.x > leftUpperPoint.x && point.x < rightLowerPoint.x &&
+            point.y > leftUpperPoint.y && point.y < rightLowerPoint.y
+          ) {
+            previousPoint = point;
+            return true;
+          }
+          return false;
+        },
+        transform(point) {
+          const rotatedPoint = getRotatedPoint(point);
+          const diff = { x: rotatedPoint.x - previousPoint.x, y: rotatedPoint.y - previousPoint.y };
+          startPoint.x += diff.x;
+          startPoint.y += diff.y;
+          finalPoint.x += diff.x;
+          finalPoint.y += diff.y;
+          transform();
+          previousPoint = rotatedPoint;
+        }
+      }
+    })(),
     ROTATE: (() => {
       let shouldDrawIndicator = true;
 
@@ -268,25 +300,22 @@ function buildTransformer({ canvas }) {
           }
         },
         isActive(point) {
-          return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y - indicatorWidth * 4, point });
+          return isIndicatorActive({ x: startPoint.x + (finalPoint.x - startPoint.x) / 2, y: startPoint.y - indicatorWidth * 4 }, point);
         },
         transform(point) {
-          const middlePoint = {
-            x: (startPoint.x + finalPoint.x) / 2,
-            y: (startPoint.y + finalPoint.y) / 2
+          const rotatedStartPoint = middlePoint ? getRotatedPointByAngle(middlePoint, startPoint, angle) : startPoint;
+          const rotatedFinalPoint = middlePoint ? getRotatedPointByAngle(middlePoint, finalPoint, angle) : finalPoint;
+
+          middlePoint = {
+            x: (rotatedStartPoint.x + rotatedFinalPoint.x) / 2,
+            y: (rotatedStartPoint.y + rotatedFinalPoint.y) / 2
           };
-          const angle = getAngle(middlePoint, point);
-          clearRectangle();
-          ctx.save();
-          ctx.translate(middlePoint.x, middlePoint.y);
-          ctx.rotate(angle);
-          ctx.translate(-middlePoint.x, -middlePoint.y);
+          startPoint = getRotatedPointByAngle(middlePoint, rotatedStartPoint, -angle);
+          finalPoint = getRotatedPointByAngle(middlePoint, rotatedFinalPoint, -angle);
+          angle = getAngle(middlePoint, point);
           shouldDrawIndicator = false;
-          drawTransformerRectangle({ startPoint, finalPoint });
-          drawTransformedImage();
-          drawIndicators();
+          transform();
           shouldDrawIndicator = true;
-          ctx.restore();
           indicators.ROTATE.draw(point);
         }
       };
@@ -299,7 +328,8 @@ function buildTransformer({ canvas }) {
 
   return {
     getActiveIndicator(point) {
-      return startPoint && finalPoint &&  Object.values(indicators).find((indicator) => indicator.isActive(point)) || null;
+      return startPoint && finalPoint && Object.values(indicators)
+        .find((indicator) => indicator.isActive(getRotatedPoint(point))) || null;
     },
     drawTransformer,
     drawTransformerWithIndicators(points) {
@@ -312,26 +342,48 @@ function buildTransformer({ canvas }) {
   function save() {
     if (startPoint && finalPoint) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(cloneOuterCanvas(), 0, 0);
-      drawTransformedImage();
-      clonedCanvas = cloneCanvas(canvas);
-      startPoint = finalPoint = initialStartPoint = initialFinalPoint = null;
+      ctx.drawImage(clonedModifiedCanvas, 0, 0);
+      clonedOriginalCanvas = clonedModifiedCanvas;
+      startPoint = finalPoint = initialStartPoint = initialFinalPoint = middlePoint = null;
+      angle = 0;
     }
   }
 
-  function drawTransformer({ startPoint, finalPoint }) {
-    initialStartPoint = startPoint;
-    initialFinalPoint = finalPoint;
+  function drawTransformer({ startPoint: currentStartPoint, finalPoint: currentFinalPoint }) {
+    initialStartPoint = { ...currentStartPoint };
+    startPoint = { ...currentStartPoint };
+    initialFinalPoint = { ...currentFinalPoint };
+    finalPoint = { ...currentFinalPoint };
     clearRectangle();
-    drawTransformerRectangle({ startPoint, finalPoint });
+    drawTransformerRectangle();
     drawTransformedImage();
   }
 
-  function transform(points) {
+  function transform() {
     clearRectangle();
-    drawTransformerRectangle(points);
+    ctx.save();
+    rotateCanvas();
     drawTransformedImage();
+    cloneModifiedCanvas();
+    drawTransformerRectangle();
     drawIndicators();
+    ctx.restore();
+  }
+
+  function rotateCanvas() {
+    if (middlePoint) {
+      ctx.translate(middlePoint.x, middlePoint.y);
+      ctx.rotate(angle);
+      ctx.translate(-middlePoint.x, -middlePoint.y);
+    }
+  }
+
+  function getRotatedPoint(point) {
+    return middlePoint ? getRotatedPointByAngle(middlePoint, point, -angle) : point;
+  }
+
+  function cloneModifiedCanvas() {
+    clonedModifiedCanvas = cloneCanvas(canvas);
   }
 
   function clearRectangle() {
@@ -339,9 +391,7 @@ function buildTransformer({ canvas }) {
     ctx.drawImage(cloneOuterCanvas(), 0, 0);
   }
 
-  function drawTransformerRectangle({ startPoint: currentStartPoint, finalPoint: currentFinalPoint }) {
-    startPoint = currentStartPoint;
-    finalPoint = currentFinalPoint;
+  function drawTransformerRectangle() {
     ctx.beginPath();
     ctx.moveTo(startPoint.x, startPoint.y);
     ctx.lineTo(finalPoint.x, startPoint.y);
@@ -364,20 +414,20 @@ function buildTransformer({ canvas }) {
       imageWidth: dImageWidth,
       imageHeight: dImageHeight
     } = getInnerCoordinates({ startPoint,  finalPoint });
-    ctx.drawImage(clonedCanvas, sImageX, sImageY, sImageWidth, sImageHeight, dImageX, dImageY, dImageWidth, dImageHeight);
+    ctx.drawImage(clonedOriginalCanvas, sImageX, sImageY, sImageWidth, sImageHeight, dImageX, dImageY, dImageWidth, dImageHeight);
   }
 
   function drawIndicators() {
     Object.values(indicators).forEach(({ draw }) => draw());
   }
 
-  function isIndicatorActive({ point, x, y }) {
-    return Math.abs(x - point.x) <= indicatorWidth && Math.abs(y - point.y) <= indicatorWidth;
+  function isIndicatorActive(indicatorPoint, mousePoint) {
+    return Math.abs(indicatorPoint.x - mousePoint.x) <= indicatorWidth && Math.abs(indicatorPoint.y - mousePoint.y) <= indicatorWidth;
   }
 
   function cloneOuterCanvas() {
     const { imageX, imageY, imageWidth, imageHeight } = getInnerCoordinates({ startPoint: initialStartPoint, finalPoint: initialFinalPoint });
-    const clonedOuterCanvas = cloneCanvas(clonedCanvas);
+    const clonedOuterCanvas = cloneCanvas(clonedOriginalCanvas);
     const clonedOuterCanvasCtx = clonedOuterCanvas.getContext('2d');
 
     clonedOuterCanvasCtx.clearRect(imageX, imageY, imageWidth, imageHeight);
